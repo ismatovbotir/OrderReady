@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use Mike42\Escpos\Printer;
 use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
+use Carbon\Carbon;
 
 class OrderController extends Controller
 {
@@ -15,7 +16,10 @@ class OrderController extends Controller
      */
     public function index()
     {
-        $this->printReceipt();
+        dd($last_order=Order::whereDate('created_at',Carbon::today())->latest()->first());
+
+    
+        //$this->printReceipt();
     }
 
     /**
@@ -24,12 +28,39 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $order=$request->all();
+        $user=$order['user'];
+        $items=$order['items'];
+        $last_order=Order::whereDate('created_at',Carbon::today())->latest()->first();
+        
+        if($last_order==null){
+            $current_order=1;
+        }else{
+            $current_order=$last_order->orderNumber+1;
+        }
+
         $order_number=$order['number'];
-        $newOrder=Order::firstOrCreate(
-            ['number'=>$order_number],
-            ['number'=>$order_number]
+        $newOrder=Order::Create(
+            [
+                'number'=>$order_number,
+                'orderNumber'=>$current_order,
+                'user'=>$user
+                
+
+            ]
         );
-        return response()->json(['status'=>'ok','order'=>$newOrder->id]);
+        $newOrder->statuses()->create([
+            'status'=>'new'
+        ]);
+        $newOrder->items()->createMany(
+            $items ??[]
+        );
+        return response()->json([
+                                    'status'=>'ok',
+                                    'message'=>[
+                                        'order'=>$newOrder->id,
+                                        'orderNumber'=>$newOrder->orderNumber  
+                                    ]
+                                ]);
 
     }
 
@@ -48,18 +79,36 @@ class OrderController extends Controller
     {
         $order=$request->all();
         $type=$order['type'];
-        $order_number=$order['number'];
+        $msg="fail";
         if ($type=='ready'){
-                Order::where('number',$order_number)
-                        ->update(['status'=>'ready']);
+                $order=Order::where([
+                    ['id',$id],
+                    ['status','new']
+                ])->first();
+                if($order!=null){
+                    $order->update(['status'=>'ready']);
+                    $order->statuses()->create(['status'=>'ready']);
+                    $msg="done";
+                }
+                //->update(['status'=>'ready']);
         }else{
-            Order::where('number',$order_number)
-            ->update(['status'=>'done']);
+
+            $order=Order::where([
+                ['id',$id],
+                ['status','ready']
+            ])->first();
+            if($order!=null){
+                $order->update(['status'=>'done']);
+                $order->statuses()->create(['status'=>'done']);
+                $msg="done";
+            }
+
+
+           
 
         }
         
-        
-        return response()->json(['status'=>'ok']);
+        return response()->json(['status'=>'ok','message'=>$msg]);
     }
 
     /**
