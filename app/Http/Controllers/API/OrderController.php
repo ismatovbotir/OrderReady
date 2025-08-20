@@ -101,10 +101,7 @@ class OrderController extends Controller
                 $order->update(['status'=>'done']);
                 $order->statuses()->create(['status'=>'done']);
                 $msg="done";
-            }
-
-
-           
+            }         
 
         }
         
