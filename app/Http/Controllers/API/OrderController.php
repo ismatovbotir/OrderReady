@@ -149,7 +149,7 @@ class OrderController extends Controller
             $printer->cut();
             $printer->close();
 
-            echo "Receipt printed!";
+           // echo "Receipt printed!";
         } catch (\Exception $e) {
             return "Print failed: " . $e->getMessage();
         }
