@@ -122,7 +122,7 @@ class OrderController extends Controller
         $order=Order::where('id',$id)->with('items')->first();
         try {
             // Подключение к принтеру (IP и порт)
-            $connector = new NetworkPrintConnector("192.168.1.199", 9100);
+            $connector = new NetworkPrintConnector(env('PRINTER_IP'), env('PRINTER_PORT'));
 
             $printer = new Printer($connector);
 
