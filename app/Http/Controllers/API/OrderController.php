@@ -16,7 +16,7 @@ class OrderController extends Controller
      */
     public function index()
     {
-        dd($last_order=Order::whereDate('created_at',Carbon::today())->latest()->first());
+        $this->printReceipt(100);
 
     
         //$this->printReceipt();
@@ -120,7 +120,9 @@ class OrderController extends Controller
     public function printReceipt($id)
     {
         $order=Order::where('id',$id)->with('items')->first();
-       
+       if ($order==null){
+            return 0;
+       } 
        // dd($order);
         try {
             // Подключение к принтеру (IP и порт)
@@ -134,19 +136,23 @@ class OrderController extends Controller
             $printer->setTextSize(2,2);
             $printer->text($shopName."\n");
             //$printer->text(str_repeat("*",floor((42-strlen($shopName))/2)).$shopName.str_repeat("=",floor((42-strlen($shopName))/2))."\n");
+            $printer->feed(2);
+            $printer->setTextSize(5,5);
             $printer->text($order->orderNumber."\n");
+            $printer->feed(2);
             $printer->setTextSize(1,1);
             $printer->text($this->formatLine("Vaqt:", $order->created_at->format('d.m.Y H:i:s'),42,' ') . "\n");
+            $printer->setTextSize(2,2);
             // Список товаров
-            $printer->feed(2);
-            $printer->barcode($order->id,Printer::BARCODE_CODE128);
+            //$printer->feed(2);
+            $printer->barcode($order->id,Printer::BARCODE_CODE39);
             $printer->feed(2);
             foreach ($order->items as $item) {
                // $printer->setJustification(Printer::JUSTIFY_LEFT);
-                $printer->text($this->formatLine($item['item'], $item['qty'],42,'_') . "\n");
+                $printer->text($this->formatLine($item['item'], $item['qty'],23,'.') . "\n");
             }
 
-            $printer->text(str_repeat('=',42)."\n");
+            $printer->text(str_repeat('=',23)."\n");
             
             $printer->feed(2);
             $printer->cut();
