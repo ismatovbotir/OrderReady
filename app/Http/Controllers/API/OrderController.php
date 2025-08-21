@@ -120,6 +120,8 @@ class OrderController extends Controller
     public function printReceipt($id)
     {
         $order=Order::where('id',$id)->with('items')->first();
+       
+       // dd($order);
         try {
             // Подключение к принтеру (IP и порт)
             $connector = new NetworkPrintConnector(env('PRINTER_IP'), env('PRINTER_PORT'));
@@ -130,15 +132,16 @@ class OrderController extends Controller
             $printer->setJustification(Printer::JUSTIFY_CENTER);
             $shopName=" Dehqon Bakery ";
             $printer->setTextSize(2,2);
-            $printer->text($shopName);
+            $printer->text($shopName."\n");
             //$printer->text(str_repeat("*",floor((42-strlen($shopName))/2)).$shopName.str_repeat("=",floor((42-strlen($shopName))/2))."\n");
-            $printer->text($order->orderNumber);
+            $printer->text($order->orderNumber."\n");
             $printer->setTextSize(1,1);
-
+            $printer->text($this->formatLine("Vaqt:", $order->created_at->format('d.m.Y H:i:s'),42,' ') . "\n");
             // Список товаров
-         
-            $printer->barcode($order->id,Printer::BARCODE_CODE39);
-            foreach ($order->items() as $item) {
+            $printer->feed(2);
+            $printer->barcode($order->id,Printer::BARCODE_CODE128);
+            $printer->feed(2);
+            foreach ($order->items as $item) {
                // $printer->setJustification(Printer::JUSTIFY_LEFT);
                 $printer->text($this->formatLine($item['item'], $item['qty'],42,'_') . "\n");
             }
@@ -159,7 +162,7 @@ class OrderController extends Controller
         $leftLength = strlen($left);
         $rightLength = strlen($right);
         $spaces = $width - ($leftLength + $rightLength);
-        return $left . str_repeat($rep, max($spaces, 0)) . $right . "\n";
+        return $left . str_repeat($rep, max($spaces-2, 0)) . $right . "\n";
     }
 
 
