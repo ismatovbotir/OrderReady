@@ -54,6 +54,7 @@ class OrderController extends Controller
         $newOrder->items()->createMany(
             $items ??[]
         );
+        $this->printReceipt($newOrder->id);
         return response()->json([
                                     'status'=>'ok',
                                     'message'=>[
@@ -116,8 +117,9 @@ class OrderController extends Controller
         //
     }
 
-    public function printReceipt()
+    public function printReceipt($id)
     {
+        $order=Order::where('id',$id)->with('items')->first();
         try {
             // Подключение к принтеру (IP и порт)
             $connector = new NetworkPrintConnector("192.168.1.199", 9100);
@@ -126,26 +128,23 @@ class OrderController extends Controller
 
             // Тестовая печать
             $printer->setJustification(Printer::JUSTIFY_CENTER);
-            $shopName="My Shop";
-            $printer->text(str_repeat("=",floor((42-strlen($shopName))/2)).$shopName.str_repeat("=",floor((42-strlen($shopName))/2))."\n");
-            $printer->text("==============\n");
+            $shopName=" Dehqon Bakery ";
+            $printer->setTextSize(2,2);
+            $printer->text($shopName);
+            //$printer->text(str_repeat("*",floor((42-strlen($shopName))/2)).$shopName.str_repeat("=",floor((42-strlen($shopName))/2))."\n");
+            $printer->text($order->orderNumber);
+            $printer->setTextSize(1,1);
 
             // Список товаров
-            $items = [
-                ['name' => 'Product A', 'price' => 12000],
-                ['name' => 'Product B', 'price' => 8000],
-                ['name' => 'Product C', 'price' => 4500],
-            ];
-            $printer->barcode("12312124124",Printer::BARCODE_CODE39);
-            foreach ($items as $item) {
-                $printer->setJustification(Printer::JUSTIFY_LEFT);
-                $printer->text($item['name'] . "   " . number_format($item['price']) . " UZS\n");
+         
+            $printer->barcode($order->id,Printer::BARCODE_CODE39);
+            foreach ($order->items() as $item) {
+               // $printer->setJustification(Printer::JUSTIFY_LEFT);
+                $printer->text($this->formatLine($item['item'], $item['qty'],42,'_') . "\n");
             }
 
-            $printer->text("==============\n");
-            $printer->setJustification(Printer::JUSTIFY_RIGHT);
-            $printer->text("Total: 24 500 UZS\n");
-
+            $printer->text(str_repeat('=',42)."\n");
+            
             $printer->feed(2);
             $printer->cut();
             $printer->close();

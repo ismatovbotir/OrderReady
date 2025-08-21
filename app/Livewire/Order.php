@@ -18,8 +18,8 @@ class Order extends Component
 
     public function updateBoard(){
         
-        $this->newOrders=OrderModel::whereDate('created_at',Carbon::today())->where('status','new')->get();
-        $this->readyOrders=OrderModel::whereDate('created_at',Carbon::today())->where('status','ready')->get();
+        $this->newOrders=OrderModel::whereDate('created_at',Carbon::today())->where('status','new')->orderBy('id','desc')->get();
+        $this->readyOrders=OrderModel::whereDate('created_at',Carbon::today())->where('status','ready')->orderBy('updated_at','desc')->get();
 
     }
     public function render()

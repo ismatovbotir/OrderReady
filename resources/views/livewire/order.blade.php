@@ -16,7 +16,7 @@
         <div class="grid grid-cols-2 gap-4 overflow-y-auto">
             @foreach($newOrders as $newOrder)
             <div class="bg-yellow-100 text-yellow-800 text-center py-4 rounded text-xl font-semibold">
-                Заказ #{{$newOrder->orderNumber}}
+                Заказ # <span class="text-4xl">{{$newOrder->orderNumber}}</span> - {{$newOrder->created_at->format('H:i')}}
             </div>
             @endforeach
 
@@ -40,7 +40,7 @@
         <div class="grid grid-cols-2 gap-4 overflow-y-auto">
             @foreach($readyOrders as $readyOrder)
             <div class="bg-green-100 text-green-800 text-center py-4 rounded text-xl font-semibold animate-pulse">
-                Заказ #{{$readyOrder->orderNumber}}
+                Заказ # <span class="text-4xl">{{$readyOrder->orderNumber}}</span> - {{$readyOrder->updated_at->format('H:i')}}
             </div>
 
             @endforeach
