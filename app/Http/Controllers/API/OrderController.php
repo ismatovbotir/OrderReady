@@ -130,7 +130,7 @@ class OrderController extends Controller
 
             // Тестовая печать
             $printer->setJustification(Printer::JUSTIFY_CENTER);
-            $shopName=" Dehqon Bakery ";
+            $shopName=" Dehkon Bakery ";
             $printer->setTextSize(2,2);
             $printer->text($shopName."\n");
             //$printer->text(str_repeat("*",floor((42-strlen($shopName))/2)).$shopName.str_repeat("=",floor((42-strlen($shopName))/2))."\n");
